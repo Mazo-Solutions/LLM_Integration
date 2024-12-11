@@ -102,7 +102,7 @@ if user_input:
     # Retrieve relevant document content
     relevant_content = ""
     reference = ""
-    if indices[0][0] != -1:
+    if indices[0][0] != -1 and distances[0][0] < 1.0:  # Threshold for relevance
         doc_id = index_to_doc_id.get(indices[0][0], "")
         relevant_content = docstore.get(doc_id, "")
         reference = f"**Reference:** Content derived from '{doc_id}'"
@@ -112,10 +112,13 @@ if user_input:
         dynamic_prompt = f"Given the following information:\n\n{relevant_content}\n\nAnswer the question: {user_input}"
         response = llm.invoke(dynamic_prompt)
     else:
+        # Out-of-context query, directly use LLM without document context
         response = llm.invoke(user_input)
+        reference = "**Note:** No relevant document found; the answer is based on general knowledge."
 
     # Append LLM's response to chat history
     st.session_state.chat_history.append({"role": "assistant", "content": response + "\n\n" + reference})
+
 
 # Display chat history
 st.markdown("### Chat History")
